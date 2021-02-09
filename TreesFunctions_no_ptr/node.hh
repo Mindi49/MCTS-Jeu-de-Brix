@@ -1,13 +1,23 @@
 #pragma once
 #include <vector>
 #include <limits>
+#include <string>
 
 /**
  * @brief Informations conservées dans le noeud.
  */
 struct Value {
-    int eval;
+    unsigned int visitCount = 0;
+    int gain = 0;
+    bool terminal = false;
+
+
+    std::string toString() const {
+        return std::to_string(gain) + "/" + std::to_string(visitCount);
+    }
 };
+
+
 class Tree;
 
 /**

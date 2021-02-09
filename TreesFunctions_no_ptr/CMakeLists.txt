@@ -4,5 +4,5 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_CXX_EXTENSIONS off)
 
-project(TreesFunctions)
-add_executable(${PROJECT_NAME} "main.cc" "node.cc" "treeutil.cc" "tree.cc")
+project(TreesFunctions_noptr)
+add_executable(${PROJECT_NAME} "main.cc" "node.cc" "treeutil.cc" "tree.cc" "mcts.cc")

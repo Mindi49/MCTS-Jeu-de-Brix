@@ -59,10 +59,10 @@ class Tree {
          * @return Une référence du noeud dont l'indice est spécifié.
          */
         inline Node & getNodeFromIndex(Node::Index const & index) {
-//            if (index.value() < nodesCount()) {
+            if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
-//            }
-//            throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
+            }
+            throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
         }
 
         /**
@@ -71,24 +71,24 @@ class Tree {
          * @return Une référence constante du noeud dont l'indice est spécifié.
          */
         inline Node const & getNodeFromIndex(Node::Index const & index) const {
-//            if (index.value() < nodesCount()) {
+            if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
-//            }
-//            throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
+            }
+            throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
         }
 
         inline Node & getRoot() {
-//            if (nodesCount() > 0) {
+            if (nodesCount() > 0) {
                 return _nodes[0];
-//            }
-//            throw std::invalid_argument("L'arbre ne possède pas de racine.");
+            }
+            throw std::invalid_argument("L'arbre ne possède pas de racine.");
         }
 
         inline Node const & getRoot() const {
-//            if (nodesCount() > 0) {
+            if (nodesCount() > 0) {
                 return _nodes[0];
-//            }
-//            throw std::invalid_argument("L'arbre ne possède pas de racine.");
+            }
+            throw std::invalid_argument("L'arbre ne possède pas de racine.");
         }
 
         inline Node & setRoot(Value const & value) {

@@ -5,8 +5,10 @@
 
 
 int main() {
-/*
+
     srand(time(nullptr));
+
+    // Choisir entre : Lecture et Génération de l'arbre
 
     // Lecture du fichier et création de l'arbre associé
     Tree randomTree;
@@ -17,18 +19,17 @@ int main() {
     std::cout << "- Fin lecture du fichier -" << std::endl;
 
 
-
-
-    // Écriture dans le fichier de l'arbre d'un arbre généré aléatoirement
-    Tree randomTree;
+    // Génération de l'arbre aléatoire
+/*    Tree randomTree;
     std::cout << "- Début génération arbre aléatoire -" << std::endl;
     auto start_generating = clock();
     rand();
     TreeUtil::generateRandomTree(randomTree, 15, 8);
     auto end_generating = clock();
     std::cout << "- Fin génération arbre aléatoire -" << std::endl;
+*/
 
-    // écriture de l'arbre créé dans le fichier
+    // Écriture de l'arbre créé dans le fichier
     std::cout << "- Début écriture -" << std::endl;
     auto start_writing = clock();
     TreeUtil::treeToFile(randomTree,"save.txt");
@@ -36,8 +37,7 @@ int main() {
     std::cout << "- Fin écriture -" << std::endl;
 
 
-
-    // affichage de l'arbre
+    // Affichage de l'arbre
     std::cout << "- Début affichage de l'arbre -" << std::endl;
     auto start_displaying = clock();
     randomTree.display();
@@ -45,16 +45,17 @@ int main() {
     std::cout << "- Fin affichage de l'arbre -" << std::endl;
 
     std::cout << "Lecture du fichier    : " << (float(end_reading)-start_reading)/CLOCKS_PER_SEC << " s." << std::endl;
-    std::cout << "Génération aléatoire  : " << (float(end_generating)-start_generating)/CLOCKS_PER_SEC << " s." << std::endl;
+    //std::cout << "Génération aléatoire  : " << (float(end_generating)-start_generating)/CLOCKS_PER_SEC << " s." << std::endl;
     std::cout << "Écriture du fichier   : " << (float(end_writing)-start_writing)/CLOCKS_PER_SEC << " s." << std::endl;
     std::cout << "Affichage de l'arbre  : " << (float(end_displaying)-start_displaying)/CLOCKS_PER_SEC << " s." << std::endl;
-*/
 
 
-    // TESTS
+
+    // TESTS MULTIPLES
     float avg_lecture = 0;
     float avg_ecriture = 0;
-    int it = 10;
+    int it = 20;
+
     for (int i(0); i < it; i++) {
         std::cout << "***** ITÉRATION " << i+1 << " *****\n";
         Tree randomTree;

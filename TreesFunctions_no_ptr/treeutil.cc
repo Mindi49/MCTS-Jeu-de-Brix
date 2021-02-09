@@ -4,7 +4,7 @@
 
 
 void TreeUtil::writeNode (Node const & node, Tree const & tree, std::ofstream & file) {
-    file << node.value().eval << "\n";  // Écriture de la valeur du noeud
+    file << node.value().toString() << "\n";  // Écriture de la valeur du noeud
     for (Node::Index const & i : node.indexesChildren()) {
         writeNode(tree.getNodeFromIndex(i), tree, file); // Écrit chaque noeud fils
     }
