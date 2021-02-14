@@ -1,86 +1,53 @@
-#include <iostream>
 #include "tree.hh"
-#include "node.hh"
 #include "treeutil.hh"
+#include "node.hh"
 
+#include <iostream>
 
-int main() {
+void iterationFileTest(int iterationCount) {
+    float readingAverage = 0;
+    float writingAverage = 0;
+    for (int i(0); i < iterationCount; i++) {
+        std::cout << "***** ITÉRATION " << i+1 << " *****" << std::endl;
+        Tree tree;
 
-    srand(time(nullptr));
+        // Lecture
+        float startReading = clock();
+        TreeUtil::fileToTree("save.txt", tree);
+        float endReading = clock();
 
-    // Choisir entre : Lecture et Génération de l'arbre
+        float readingTime = (endReading-startReading)/CLOCKS_PER_SEC;
+        std::cout << "Lecture du fichier    : " << readingTime << " s." << std::endl;
+        readingAverage += readingTime;
 
-    // Lecture du fichier et création de l'arbre associé
-    Tree randomTree;
-    std::cout << "- Début lecture du fichier -" << std::endl;
-    auto start_reading = clock();
-    TreeUtil::fileToTree("save.txt",randomTree);
-    auto end_reading = clock();
-    std::cout << "- Fin lecture du fichier -" << std::endl;
+        // Écriture
+        float startWriting = clock();
+        TreeUtil::treeToFile(tree,"save.txt");
+        float endWriting = clock();
 
-
-    // Génération de l'arbre aléatoire
-/*    Tree randomTree;
-    std::cout << "- Début génération arbre aléatoire -" << std::endl;
-    auto start_generating = clock();
-    rand();
-    TreeUtil::generateRandomTree(randomTree, 15, 8);
-    auto end_generating = clock();
-    std::cout << "- Fin génération arbre aléatoire -" << std::endl;
-*/
-
-    // Écriture de l'arbre créé dans le fichier
-    std::cout << "- Début écriture -" << std::endl;
-    auto start_writing = clock();
-    TreeUtil::treeToFile(randomTree,"save.txt");
-    auto end_writing = clock();
-    std::cout << "- Fin écriture -" << std::endl;
-
-
-    // Affichage de l'arbre
-    std::cout << "- Début affichage de l'arbre -" << std::endl;
-    auto start_displaying = clock();
-    randomTree.display();
-    auto end_displaying = clock();
-    std::cout << "- Fin affichage de l'arbre -" << std::endl;
-
-    std::cout << "Lecture du fichier    : " << (float(end_reading)-start_reading)/CLOCKS_PER_SEC << " s." << std::endl;
-    //std::cout << "Génération aléatoire  : " << (float(end_generating)-start_generating)/CLOCKS_PER_SEC << " s." << std::endl;
-    std::cout << "Écriture du fichier   : " << (float(end_writing)-start_writing)/CLOCKS_PER_SEC << " s." << std::endl;
-    std::cout << "Affichage de l'arbre  : " << (float(end_displaying)-start_displaying)/CLOCKS_PER_SEC << " s." << std::endl;
-
-
-
-    // TESTS MULTIPLES
-    float avg_lecture = 0;
-    float avg_ecriture = 0;
-    int it = 20;
-
-    for (int i(0); i < it; i++) {
-        std::cout << "***** ITÉRATION " << i+1 << " *****\n";
-        Tree randomTree;
-        auto start_reading = clock();
-        TreeUtil::fileToTree("save.txt",randomTree);
-        auto end_reading = clock();
-
-        auto time_lecture = (float(end_reading)-start_reading)/CLOCKS_PER_SEC;
-        std::cout << "Lecture du fichier    : " << time_lecture << " s." << std::endl;
-        avg_lecture += time_lecture;
-
-        auto start_writing = clock();
-        TreeUtil::treeToFile(randomTree,"save.txt");
-        auto end_writing = clock();
-
-
-        auto time_ecriture = (float(end_writing)-start_writing)/CLOCKS_PER_SEC;
-        std::cout << "Écriture du fichier   : " << time_ecriture << " s." << std::endl;
-        avg_ecriture += time_ecriture;
-        std::cout << std::endl;
+        float writingTime = (endWriting-startWriting)/CLOCKS_PER_SEC;
+        std::cout << "Écriture du fichier   : " << writingTime << " s." << std::endl << std::endl;
+        writingAverage += writingTime;
     }
 
-    std::cout << "Moyenne lecture   : " << float(avg_lecture)/float(it) << " s." << std::endl;
-    std::cout << "Moyenne écriture  : " << float(avg_ecriture)/float(it) << " s." << std::endl;
+    if (iterationCount != 0) {
+        std::cout << "Moyenne de lecture   : " << readingAverage/iterationCount << " s." << std::endl;
+        std::cout << "Moyenne d'écriture  : " << writingAverage/iterationCount << " s." << std::endl;
+    }
+}
 
+void generateRandom() {
+    Tree randomTree;
+    TreeUtil::generateRandomTree(randomTree, 7, 3);
+    TreeUtil::treeToFile(randomTree, "brixTree.txt");
 
+    Tree fileTree;
+    TreeUtil::fileToTree("brixTree.txt", fileTree);
+    fileTree.display();
+}
+
+int main() {
+    //iterationFileTest(10); // Invalide avec la nouvelle structure
+    generateRandom();
     return 0;
 }

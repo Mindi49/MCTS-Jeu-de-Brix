@@ -1,6 +1,8 @@
 #pragma once
 #include "tree.hh"
 #include "node.hh"
+#include "value.hh"
+
 #include <fstream>
 
 /**
@@ -12,6 +14,8 @@ class TreeUtil {
          * @brief Crée un arbre n-aire à partir d'un fichier texte.
          * @param filename  Nom du fichier à lire.
          * @param tree      L'arbre n-aire qui sera construit à partir du fichier.
+         * @throw invalid_argument Si le fichier n'existe pas, n'a pas pu être ouvert ou
+         * possède une syntaxe invalide.
          */
         static void fileToTree (std::string const & filename, Tree & tree);
 
@@ -55,6 +59,20 @@ class TreeUtil {
          * @param maxChildrenCount  Le nombre maximum d'enfants que peut avoir chaque noeud.
          */
         static void generateChildren(Tree & tree, Node & node, int maxDepth, int maxChildrenCount);
+
+        /**
+         * @brief Génère une valeur aléatoire.
+         * @return La valeur aléatoire créée.
+         */
+        static Value generateRandomValue();
+
+        /**
+         * @brief Convertit une ligne d'un fichier contenant un arbre en une valeur.
+         * @param line La ligne contenant les informations d'une valeur à convertir.
+         * @throw invalid_argument Si la ligne est mal formatée.
+         * @return La valeur correspondant à la ligne.
+         */
+        static Value lineToValue(std::string const& line);
 
         TreeUtil() = delete;
 

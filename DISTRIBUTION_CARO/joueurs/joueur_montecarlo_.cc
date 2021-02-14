@@ -31,11 +31,13 @@ Node & Joueur_MonteCarlo_::descent(Node & currentNode){
 
 
 Node & Joueur_MonteCarlo_::growth(Node & currentNode, Brix & move) {
-    return _tree.addChildFor(currentNode, Value{}); // TODO : renseigner la BRIX à la valeur
+    return _tree.addChildFor(currentNode, Value{}); // TODO : renseigner la BRIX à la valeur pour pouvoir choisir ce coup à la fin
 
 }
 
 
+
+// on passe le noeud courant et son parent
 float Joueur_MonteCarlo_::calculateQUBC (Node const & node, Node const & parentNode) const {
     return (node.value().gain / node.value().visitCount) + sqrtf(POND_C * (logf(parentNode.value().visitCount / node.value().visitCount)));
     // gain / visit + racine(c * ln(visit parent) / visit)
@@ -58,7 +60,9 @@ Node & Joueur_MonteCarlo_::findBestQUBC(Node & node) const {
 
 
 
+int rollout (Node const & grownNode) {
 
+}
 
 
 
@@ -69,8 +73,8 @@ void Joueur_MonteCarlo_::recherche_coup(Jeu jeu, Brix &coup) {
     Node & current = _tree.getRoot();
 
     while(true) { // TODO
-        descent(current);
-        // rollout
+        Node & grownNode = descent(current); // renvoie le noeud à partir duquel faire le rollout
+        int gain = rollout(grownNode);// rollout
         // update
     }
 
