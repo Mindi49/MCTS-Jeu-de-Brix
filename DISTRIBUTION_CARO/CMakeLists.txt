@@ -15,6 +15,6 @@ add_compile_options(-Wall -Wpedantic)
 
 
 aux_source_directory(. SRC_LIST)
-add_executable(${PROJECT_NAME} ${SRC_LIST} "../TreesFunctions_no_ptr/treeutil.cc" "../TreesFunctions_no_ptr/tree.cc" "../TreesFunctions_no_ptr/node.cc")
+add_executable(${PROJECT_NAME} ${SRC_LIST} "../TreesFunctions_no_ptr/treeutil.cc" )
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} joueurs)
 
