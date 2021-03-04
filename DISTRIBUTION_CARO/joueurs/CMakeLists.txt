@@ -16,6 +16,7 @@ set(SRCS
     joueur_random.cc
     joueur_manuel.cc
     joueur_montecarlo_.cc
+    treeutil.cc
     )
     
 set(HEADERS
@@ -23,6 +24,10 @@ set(HEADERS
     joueur_random.hh
     joueur_manuel.hh
     joueur_montecarlo_.hh
+    value.hh
+    node.hh
+    tree.hh
+    treeutil.hh
     )
 
 add_library(joueurs ${SRCS} ${HEADERS})

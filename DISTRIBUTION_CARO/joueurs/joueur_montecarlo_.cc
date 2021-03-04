@@ -1,213 +1,215 @@
 #include "joueur_montecarlo_.hh"
+#include "../arbitre.hh"
 #include <math.h>
 #include <limits>
 #include <cstdlib>
 #include <algorithm>
-Joueur_MonteCarlo_::Joueur_MonteCarlo_(std::string nom, bool joueur) : Joueur(nom,joueur), _tree() {
-    _tree.setRoot(Value{});
+#include <future>
+#include <chrono>
+
+Tree Joueur_MonteCarlo_::_tree;
+bool Joueur_MonteCarlo_::_created(false);
+
+Joueur_MonteCarlo_::Joueur_MonteCarlo_(std::string name, bool player) : Joueur(name,player), _canWrite(true) {
+    if(!_created) {
+        _tree.setRoot(Value{0,0,Brix(0,0,0,0)});
+        TreeUtil::fileToTree("ABBEL_save.MCTS",_tree);
+        _created = true;
+    }
+    _currentRoot = _tree.getRoot().index();
 }
 
 
+Joueur_MonteCarlo_::~Joueur_MonteCarlo_() {
+    if (_canWrite) {
+        //TreeUtil::treeToFile(_tree,"ABBEL_save.MCTS");
+    }
+    _tree.addCapacity(50*NB_PIECE_MAX*TEMPS_POUR_UN_COUP);
+}
 
-/*char Joueur_MonteCarlo_::nom_abbrege() const
-{
+
+/*
+char Joueur_MonteCarlo_::nom_abbrege() const {
     return 'M';
 }
 */
 
-void Joueur_MonteCarlo_::recherche_coup(Jeu jeu, Brix & coup) {
-    // à voir...
-    if (!joueur()) { // on est pas le premier à jouer
-        // trouver le coup joué par l'adversaire
-        Brix opponentMove = findOpponentMove(jeu);
 
-        // faire le MCTS à partir du coup joué par l'adversaire...
+void Joueur_MonteCarlo_::recherche_coup(Jeu game, Brix & move) {
+    _canWrite = false;
+    if (game.nbCoupJoue() != 0) { // Si l'adversaire vient de jouer
+        Brix opponentMove(move);
+        playOpponentMove(opponentMove,game);
     }
-    MCTS(jeu);
-    // renvoyer le meilleur coup dans ceux que l'on peut alors jouer
-    chooseBestNode(coup); // arrete la fonction pour rendre le mutex
-}
-
-
-void Joueur_MonteCarlo_::MCTS(Jeu & jeu) {
-    Node & currentNode = _tree.getRoot(); // à remplacer ptet par un node qui serait la racine de l'arbre sur lequel on travaille
-    while(true) { // TODO : time left
-        Jeu currentGame = jeu;
-        Node & grownNode = descent(currentNode, currentGame); // renvoie le noeud à partir duquel faire le rollout
-        int gain = rollout(grownNode, currentGame);// rollout
-        update(currentNode, gain);
+    // Choix du coup à jouer
+    if (_tree.getNodeFromIndex(_currentRoot).childrenCount() > 0) { // Si on a déjà des enfants
+        _currentRoot = chooseBestChildNode();
     }
-    // arrete la fonction pour rendre le mutex
-}
-
-
-Node & Joueur_MonteCarlo_::descent(Node & currentNode, Jeu & jeu){
-    if (!currentNode.value().terminal) { // feuille de l'arbre de recherche
-// SELECTION DES COUPS SUR L'ARBRE DE RECHERCHE ACTUEL
-        std::vector<Brix> legalMoves = findLegalMoves(jeu);
-        //if (true) {// TODO : s'il reste des coups licites non explorés (pas exploré 1 fois, noeud pas créé)
-// CHOIX D'UN CANDIDAT NON EPLORÉ
-        if (currentNode.childrenCount() < legalMoves.size()) {
-            // pour trouver pour chaque legal move s'il est déjà exploré (pas opti)
-            std::vector<Brix> exploredMoves;
-            for (auto const & child : currentNode.indexesChildren()) {
-                exploredMoves.push_back(_tree.getNodeFromIndex(child).value().brix);
-            }
-            auto it = std::find_if(legalMoves.begin(), legalMoves.end(), [&exploredMoves](Brix const & legalMove){
-                return std::find(exploredMoves.begin(), exploredMoves.end(), legalMove) == exploredMoves.end();
-            });
-            if (it != legalMoves.end())
-                Brix move = *it;
-            // à voir ce qu'on fait sinon
-
-            // on prend le premier non exploré (ou on le choisit au pif si on est courageux)
-             // TODO : trouver la valeur en fonctions des coups dispos
-// FEUILLE DE L'ARBRE DE RECHERCHE ACTUEL
-// CHOIX DU NOUVEAU NOEUD À CREER PARMI LES SUCCESSEURS
-            jeu.joue(move);
-            return growth(currentNode, move);
-        }
-        else {
-// FONCTION DE VALEUR DE COUP
-// CHOIX DU MEILLEUR CANDIDAT
-            Node & bestNode = findBestQUBC(currentNode);
-            jeu.joue(Brix(bestNode.value().brix));
-            return descent(bestNode, jeu);
-        }
+    else { // Crée un noeud parmi les coups légaux
+        _currentRoot = processMCTS(game);
     }
-    return currentNode;
+    move = _tree.getNodeFromIndex(_currentRoot).value().brix;
+    game.joue(move);
+    // Lance un thread qui réalise le MCTS en boucle selon le temps écoulé
+    std::thread(&Joueur_MonteCarlo_::processLoopingMCTS,this,game).detach();
 }
 
 
-Node & Joueur_MonteCarlo_::growth(Node & currentNode, Brix const & move) {
-    currentNode.value().terminal = false;
-    return _tree.addChildFor(currentNode, Value{0,0,true,move}); // TODO : renseigner la BRIX à la valeur pour pouvoir choisir ce coup à la fin, ax, ao, ox, oo
-}
+void Joueur_MonteCarlo_::playOpponentMove(Brix const & opponentMove, Jeu const & game) {
+    // Cherche le noeud fils correspondant au coup joué par l'adversaire
+    std::vector<Node::Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
+    std::vector<Node::Index>::const_iterator it(std::find_if(indexesChildren.begin(), indexesChildren.end(), [&opponentMove, this](Node::Index child) {
+        Brix const & brix(_tree.getNodeFromIndex(child).value().brix);
+        return opponentMove.getAo() == brix.getAo() && opponentMove.getAx() == brix.getAx() && opponentMove.getOo() == brix.getOo() && opponentMove.getOx() == brix.getOx();
+    }));
 
-
-
-// on passe le noeud courant et son parent
-float Joueur_MonteCarlo_::calculateQUBC (Node const & node, Node const & parentNode) const {
-    return (node.value().gain / node.value().visitCount) + sqrtf(POND_C * (logf(parentNode.value().visitCount / node.value().visitCount)));
-    // gain / visit + racine(c * ln(visit parent) / visit)
-}
-
-
-Node & Joueur_MonteCarlo_::findBestQUBC(Node & node) const {
-    float max = std::numeric_limits<float>::min();
-    Node & bestNode = node;
-    for (auto const & i : node.indexesChildren()) {
-        Node const & child = _tree.getNodeFromIndex(i);
-        float qubc = calculateQUBC(child,node);
-        if (qubc > max) {
-            max = qubc;
-            bestNode = child;
-        }
-    }
-    return bestNode;
-}
-
-
-
-int Joueur_MonteCarlo_::rollout (Node const & grownNode, Jeu jeu) {
-    while (!jeu.fini()) {
-         std::vector<Brix> legalMoves = findLegalMoves(jeu);
-         Brix move = legalMoves[rand() % legalMoves.size()];
-         jeu.joue(move);
-    }
-    if (jeu.partie_nulle()) return 0;
-    if ((joueur() && jeu.partie_X()) || (!joueur() && jeu.partie_O())) return 1;
-    else return -1;
-}
-
-
-void Joueur_MonteCarlo_::update (Node & currentNode, int gain) {
-    if (_tree.isRoot(currentNode)) {
-        currentNode.value().gain += gain;
-        currentNode.value().visitCount += 1;
+    if (it == indexesChildren.end()) { // Si le noeud n'est pas déjà présent dans l'arbre
+        _currentRoot = growth(_currentRoot, opponentMove);
+        update(_currentRoot, rollout(game));
     }
     else {
-        currentNode.value().gain += gain;
-        currentNode.value().visitCount += 1;
-        update(_tree.getNodeFromIndex(currentNode.parentIndex()), gain);
+        _currentRoot = *it;
     }
 }
 
-Jeu constructGameFromCurrentNode() {
 
+Node::Index Joueur_MonteCarlo_::processMCTS(Jeu game) {
+    Jeu currentGame = game;
+    Node::Index grownNodeIndex(descent(_currentRoot,currentGame));
+    int gain = rollout(currentGame);
+    update(grownNodeIndex, gain);
+    return grownNodeIndex;
 }
 
-Brix Joueur_MonteCarlo_::findOpponentMove(Jeu jeu) {
-    std::vector<Brix> legalMoves = findLegalMoves(jeu);
-    for (auto const & i : legalMoves) {
-        Jeu tmp = constructGameFromCurrentNode();
-        tmp.joue(i);
-        if (tmp.plateau() == jeu.plateau())
-            return i;
+
+Node::Index Joueur_MonteCarlo_::chooseBestChildNode() const {
+    std::vector<Node::Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
+    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [this](Node::Index nodeIndex1, Node::Index nodeIndex2) {
+        Value const & nodeValue1(_tree.getNodeFromIndex(nodeIndex1).value());
+        Value const & nodeValue2(_tree.getNodeFromIndex(nodeIndex2).value());
+        return float(nodeValue1.gain)/nodeValue1.visitCount < float(nodeValue2.gain)/nodeValue2.visitCount;
+    });
+}
+
+
+void Joueur_MonteCarlo_::processLoopingMCTS(Jeu game) {
+    float time(0);
+    std::chrono::high_resolution_clock::time_point start(std::chrono::high_resolution_clock::now());
+    while(TEMPS_POUR_UN_COUP - time > 0) {
+        processMCTS(game);
+        std::chrono::high_resolution_clock::time_point loopEnd(std::chrono::high_resolution_clock::now());
+        time = std::chrono::duration_cast<std::chrono::milliseconds>(loopEnd - start).count();
     }
+    // On ne peut pas écrire tant qu'on a pas réalisé toutes les étapes à la suite
+    _canWrite = true;
 }
 
-void Joueur_MonteCarlo_::chooseBestNode(Brix & coup) {
-    int maxValue = 0;
 
-    for (auto const & i : _tree.getRoot().indexesChildren()) {
-        Node & node = _tree.getNodeFromIndex(i);
-        if (node.value().gain > maxValue) {
-            Brix const &  brix = node.value().brix;
-            coup.setAllCoord(brix.getAo(),brix.getAx(),brix.getOx(),brix.getOo());
-            maxValue = node.value().gain;
+Node::Index Joueur_MonteCarlo_::descent(Node::Index currentNodeIndex, Jeu & game){
+    std::vector<Brix> legalMoves(findLegalMoves(game));
+    if (!legalMoves.empty()) {
+        Node & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
+
+        if (currentNode.childrenCount() < legalMoves.size()) { // S'il reste des coups licites non explorés
+            Brix const & move = legalMoves[currentNode.childrenCount()];
+            game.joue(move);
+            return growth(currentNodeIndex,move);
+        }
+        else { // Si on a exploré au moins une fois tous les coups licites à partir de ce noeud
+            Node::Index bestNodeIndex(findBestQUBC(currentNodeIndex));
+            game.joue(_tree.getNodeFromIndex(bestNodeIndex).value().brix);
+            return descent(bestNodeIndex,game);
         }
     }
+    game.joue(_tree.getNodeFromIndex(currentNodeIndex).value().brix);
+    return currentNodeIndex;
 }
 
-std::vector<Brix> Joueur_MonteCarlo_::findLegalMoves(Jeu jeu) {
+
+float Joueur_MonteCarlo_::calculateNodeQUBC(Node::Index nodeIndex, Node::Index parentNodeIndex) const {
+    Value const & nodeValue(_tree.getNodeFromIndex(nodeIndex).value());
+    Value const & parentNodeValue(_tree.getNodeFromIndex(parentNodeIndex).value());
+    return (nodeValue.gain / nodeValue.visitCount) + sqrtf(POND_C * (logf(parentNodeValue.visitCount / nodeValue.visitCount)));
+}
+
+
+Node::Index Joueur_MonteCarlo_::findBestQUBC(Node::Index nodeIndex) const {
+    std::vector<Node::Index> indexesChildren(_tree.getNodeFromIndex(nodeIndex).indexesChildren());
+    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [this,nodeIndex](Node::Index childNodeIndex1, Node::Index childNodeIndex2) {
+        return calculateNodeQUBC(childNodeIndex1,nodeIndex) < calculateNodeQUBC(childNodeIndex2,nodeIndex);
+    });
+}
+
+
+Node::Index Joueur_MonteCarlo_::growth(Node::Index currentNodeIndex, Brix const & move) {
+    return _tree.addChildFor(currentNodeIndex, Value{0,0,move}).index();
+}
+
+
+int Joueur_MonteCarlo_::rollout (Jeu game) {
+    while (!game.fini()) {
+        std::vector<Brix> const & legalMoves = findLegalMoves(game);
+        game.joue(legalMoves[static_cast<size_t>(rand()) % legalMoves.size()]);
+    }
+    if (game.partie_nulle()) {
+        return 0;
+    }
+    if ((joueur() && game.partie_X()) || (!joueur() && game.partie_O())) {
+        return 1;
+    }
+    return -1;
+}
+
+
+void Joueur_MonteCarlo_::update (Node::Index currentNodeIndex, int gain) {
+    Node & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
+    currentNode.value().gain += gain;
+    currentNode.value().visitCount += 1;
+    if (!_tree.isRoot(currentNode)) {
+        update(currentNode.parentIndex(), gain);
+    }
+}
+
+
+std::vector<Brix> Joueur_MonteCarlo_::findLegalMoves(Jeu const & game) const{
     std::vector<Brix> legalMoves;
+    legalMoves.reserve(20);
     Brix b_canditate;
-    int turn = jeu.nbCoupJoue() + 1; //la b_candidate devra être valide au tour auquel on va la jouer,i.e. au tour suivant
-    int moveIndex, size;
-    int aX, oX, aO, oO; //coordonnees de la Brix que l'on va joué
+    int turn(game.nbCoupJoue() + 1);
 
-    for (int i = 0; i < MAX_LARGEUR;i++) {//i abscisse donc numero de colonne
-            int j = 0; //j ordonnee donc numero de ligne
-            while(j < MAX_HAUTEUR && jeu.plateau()[j][i] != '0') { //dans plateau l'ordonnee en premier
-                j++;
-            }
-            if (j < MAX_HAUTEUR) { //On est tombé sur une case vide, i.e. contenant '0'
-                    //Cherchons des coups valides à partir de cette case vide.
-                    b_canditate.setAllCoord(i,j,i,j+1); //brix verticale dont le bottom est X
-                    if (jeu.coup_licite(b_canditate,turn))
-                        legalMoves.push_back(b_canditate);
-
-                    b_canditate.setAllCoord(i,j+1,i,j); //brix verticale dont le bottom est O
-                    if (jeu.coup_licite(b_canditate,turn))
-                        legalMoves.push_back(b_canditate);
-
-                    b_canditate.setAllCoord(i,j,i+1,j); //brix horizontale commençant par X
-                    if (jeu.coup_licite(b_canditate,turn))
-                        legalMoves.push_back(b_canditate);
-
-                    b_canditate.setAllCoord(i+1,j,i,j); //brix terminant commençant par X
-                    if (jeu.coup_licite(b_canditate,turn))
-                        legalMoves.push_back(b_canditate);
-                }
+    for (int i(0); i < MAX_LARGEUR; i++) {
+        int j(0);
+        while(j < MAX_HAUTEUR && game.plateau()[static_cast<size_t>(j)][static_cast<size_t>(i)] != '0') {
+            j++;
         }
+        if (j < MAX_HAUTEUR) {
+            b_canditate.setAllCoord(i,j,i,j+1);
+            if (game.coup_licite(b_canditate,turn)) {
+                legalMoves.push_back(b_canditate);
+            }
+
+            b_canditate.setAllCoord(i,j+1,i,j);
+            if (game.coup_licite(b_canditate,turn)) {
+                legalMoves.push_back(b_canditate);
+            }
+
+            b_canditate.setAllCoord(i,j,i+1,j);
+            if (game.coup_licite(b_canditate,turn)) {
+                legalMoves.push_back(b_canditate);
+            }
+
+            b_canditate.setAllCoord(i+1,j,i,j);
+            if (game.coup_licite(b_canditate,turn)) {
+                legalMoves.push_back(b_canditate);
+            }
+        }
+    }
     return legalMoves;
-    //std::cout<<legalMoves<<std::endl;
-    //On choisit un coup au hazard
-    size = legalMoves.size();
-    moveIndex = size == 1 ?  0 : rand() % (size-1);
-    aO = legalMoves[moveIndex].getAo();
-    oO = legalMoves[moveIndex].getOo();
-    aX = legalMoves[moveIndex].getAx();
-    oX = legalMoves[moveIndex].getOx();
-    //coup.setAllCoord(aX, oX, aO, oO);
-
-    //std::this_thread::sleep_for (std::chrono::milliseconds(rand() % (TEMPS_POUR_UN_COUP+1)));
-
 }
 
 
-
-
-
-
+std::vector<Brix>::const_iterator Joueur_MonteCarlo_::findBrix(std::vector<Brix> const & brixs, Brix const & b) const {
+    return std::find_if(brixs.begin(),brixs.end(),[&b](Brix const & brix) {
+        return brix.getAo() == b.getAo() && brix.getAx() == b.getAx() && brix.getOo() == b.getOo() && brix.getOx() == b.getOx();
+    });
+}

@@ -15,15 +15,16 @@ class Node {
          * @brief Représentation d'un indice de tableau.
          */
         struct Index {
-            private:
+            public:
                 Index() : _value(std::numeric_limits<size_t>::max()) {}
+            public:
                 Index(size_t value) : _value(value) {}
 
                 inline bool isValid() const { return _value != std::numeric_limits<size_t>::max(); }
                 inline size_t value() const { return _value; }
                 inline void setValue(size_t value) { _value = value; }
 
-                size_t _value;
+                size_t _value = std::numeric_limits<size_t>::max();
                 friend Tree;
         };
 

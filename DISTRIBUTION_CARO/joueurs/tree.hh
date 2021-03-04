@@ -55,7 +55,6 @@ class Tree {
             if (!isNodePresent(node)) {
                 throw std::invalid_argument("Le noeud renseigné n'est pas présent dans l'arbre.");
             }
-
             Node::Index const indexNode = node.index();
             _nodes.emplace_back(value, Node::Index{nodesCount()}, indexNode);
             _nodes[indexNode.value()].addChildIndex(_nodes.back().index());
@@ -72,7 +71,7 @@ class Tree {
               if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
               }
-              throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
+              throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé (" + std::to_string(index.value()) + ").");
         }
 
         /**
@@ -85,7 +84,7 @@ class Tree {
               if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
               }
-              throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé.");
+              throw std::invalid_argument("Aucun noeud n'est présent à l'index précisé (" + std::to_string(index.value()) + ").");
         }
 
         /**
@@ -125,7 +124,7 @@ class Tree {
         }
 
         /**
-         * @brief isRoot Vérifie que le noeud passé en paramètre est une référence de la racine de l'arbre.
+         * @brief Vérifie que le noeud passé en paramètre est une référence de la racine de l'arbre.
          * @param node  Le noeud en question.
          * @return Vrai si le noeud est la racine de l'arbre, faux sinon.
          */
@@ -134,12 +133,20 @@ class Tree {
         }
 
         /**
-         * @brief isLeaf Vérifie que le noeud passé en paramètre est une une feuille de l'arbre.
+         * @brief Vérifie que le noeud passé en paramètre est une une feuille de l'arbre.
          * @param node  Le noeud en question.
          * @return Vrai si le noeud est une feuille de l'arbre, faux sinon.
          */
         inline bool isLeaf(Node const & node) const {
             return node.childrenCount() == 0;
+        }
+
+        /**
+         * @brief Ajoute en avance une capacité donnée au tableau contenant les noeuds.
+         * @param capacity  La capacité à ajouter.
+         */
+        inline void addCapacity(size_t capacity) {
+            _nodes.reserve(_nodes.capacity() + capacity);
         }
 
         /**

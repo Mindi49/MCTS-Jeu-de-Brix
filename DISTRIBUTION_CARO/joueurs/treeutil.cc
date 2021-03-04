@@ -1,5 +1,6 @@
 #include "treeutil.hh"
-
+#include "../jeu.hh"
+#include "../arbitre.hh"
 #include <cstdlib>
 #include <regex>
 #include <stack>
@@ -22,6 +23,9 @@ void TreeUtil::treeToFile (Tree const & tree, std::string const & filename) {
 }
 
 void TreeUtil::fileToTree(std::string const & filename, Tree & tree) {
+    if(!std::ifstream(filename.c_str()).good()) {
+        return;
+    }
     std::ifstream file(filename);
     if (file.is_open()) {
         std::stack<Node::Index> stack;
@@ -29,7 +33,7 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree) {
         std::string line;
         // Lecture du nombre de noeuds
         if (std::getline(file,line)) {
-            tree = Tree(static_cast<size_t>(std::stoi(line)));
+            tree = Tree(static_cast<size_t>(std::stoi(line) + (50*NB_PIECE_MAX*TEMPS_POUR_UN_COUP)));
         }
 
         // Lecture de chaque ligne du fichier
@@ -61,13 +65,28 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree) {
 }
 
 Value TreeUtil::lineToValue(std::string const& line) {
-    std::smatch matches;
-    if (regex_search(line, matches, std::regex{"^([0-9]+)\\/([0-9]+)\\/([0-1])$"})) {
-        return Value{std::stoi(matches[1].str()),
-                    std::stoi(matches[2].str()),
-                    std::stoi(matches[3].str()) != 0};
+    try {
+        Value value;
+        std::istringstream stm(line) ;
+        std::string word ;
+        stm >> word;
+        value.gain = std::stoi(word);
+        stm >> word;
+        value.visitCount = std::stoi(word);
+        stm >> word;
+        value.brix.setAx(std::stoi(word));
+        stm >> word;
+        value.brix.setOx(std::stoi(word));
+        stm >> word;
+        value.brix.setAo(std::stoi(word));
+        stm >> word;
+        value.brix.setOo(std::stoi(word));
+        value.brix.setDefinie(true);
+        return value;
     }
-    throw std::invalid_argument("Une ligne du fichier est invalide : '" + line + "'.");
+    catch (std::exception const &) {
+        throw std::invalid_argument("Une ligne du fichier est invalide : '" + line + "'.");
+    }
 }
 
 void TreeUtil::generateRandomTree(Tree & tree, int maxDepth, int maxChildrenCount) {
@@ -90,5 +109,5 @@ void TreeUtil::generateChildren(Tree & tree, Node & node, int maxDepth, int maxC
 Value TreeUtil::generateRandomValue() {
     int gain = rand() % 50;
     int lose = rand() % 50;
-    return Value{gain, gain + lose, 0};
+    return Value{gain, gain + lose, Brix(1,1,1,1)};
 }

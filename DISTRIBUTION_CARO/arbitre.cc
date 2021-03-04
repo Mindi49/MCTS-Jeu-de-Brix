@@ -96,7 +96,7 @@ int Arbitre::challenge()
                            :
                              victoire_joueur_2++ ));
 
-            std::this_thread::sleep_for (std::chrono::milliseconds(2500)); // temps de latence entre deux parties
+            std::this_thread::sleep_for (std::chrono::milliseconds(500)); // temps de latence entre deux parties
             _numero_partie++;
             initialisation();
         }
@@ -124,7 +124,7 @@ result Arbitre::partie()
                     std::ref(_coups_mutex[_numero_partie-1]));
 
             std::this_thread::sleep_for (std::chrono::milliseconds(TEMPS_POUR_UN_COUP));
-            //        std::this_thread::sleep_for (std::chrono::seconds(TEMPS_POUR_UN_COUP));
+           //        std::this_thread::sleep_for (std::chrono::seconds(TEMPS_POUR_UN_COUP));
 
             if (!_coups_mutex[_numero_partie-1].try_lock()) {
                     std::cerr <<  std::endl << "mutex non rendu " << std::endl;
