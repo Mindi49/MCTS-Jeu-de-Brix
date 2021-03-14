@@ -10,9 +10,8 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_CXX_EXTENSIONS off)
-set(CMAKE_CXX_FLAGS "${CLAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 add_compile_options(-Wall -Wpedantic)
-
 
 
 aux_source_directory(. SRC_LIST)

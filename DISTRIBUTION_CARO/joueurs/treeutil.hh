@@ -67,12 +67,37 @@ class TreeUtil {
         static Value generateRandomValue();
 
         /**
-         * @brief Convertit une ligne d'un fichier contenant un arbre en une valeur.
-         * @param line La ligne contenant les informations d'une valeur à convertir.
-         * @throw invalid_argument Si la ligne est mal formatée.
-         * @return La valeur correspondant à la ligne.
+         * @brief Lit le prochain nombre ou signe du fichier.
+         * @param file      Le fichier à lire.
+         * @param backtrack Paramètre de sortie. Vrai si un signe de backtrack est rencontré.
+         * @return La valeur de l'entier lu.
          */
-        static Value lineToValue(std::string const& line);
+        inline static int readNextInt(FILE *file, bool & backtrack) {
+            int item = 0;
+            char negative = 1;
+            int currentChar;
+            do {
+                currentChar = getc(file);
+                switch (currentChar) {
+                    case '-' :
+                        negative = -1;
+                        break;
+                    case '<' :
+                        getc(file);
+                        backtrack = true;
+                        return 0;
+                    case ' ' :
+                    case '\n':
+                    case EOF :
+                        backtrack = false;
+                        return item * negative;
+                    default :
+                        item = item * 10 + (currentChar - '0');
+                }
+            } while (true);
+        }
+
+
 
         TreeUtil() = delete;
 

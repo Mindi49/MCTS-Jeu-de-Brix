@@ -29,69 +29,54 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree, size_t node
         tree.setRoot(Value{0,0,Brix(0,0,0,0)});
         return;
     }
-    std::ifstream file(filename);
-    if (file.is_open()) {
+
+    FILE *file;
+    file = fopen(filename.c_str(), "r");
+    if (file != NULL) {
         std::stack<Node::Index> stack;
         // Le sommet de pile représente l'index du noeud courant
-        std::string line;
-        // Lecture du nombre de noeuds
-        if (std::getline(file,line)) {
-            if (nodeCountAllocation == 1) {
-                nodeCountAllocation = static_cast<size_t>(std::stoi(line));
-            }
-            tree = Tree(nodeCountAllocation);
+        bool backtrack;
+        int treeNodesCount = TreeUtil::readNextInt(file,backtrack);
+        if (nodeCountAllocation == 1) {
+            nodeCountAllocation = static_cast<size_t>(treeNodesCount);
         }
+        tree = Tree(nodeCountAllocation);
 
         // Lecture de chaque ligne du fichier
-        while (std::getline(file,line)) {
-            if (!line.empty()) {
-                if (line[0] == '<') {   // Symbole de backtrack, le noeud courant (sommet de pile) n'a plus de fils
-                    if (stack.size() >= 2)
-                        stack.pop();    // Retire le noeud courant de la pile pour traiter le suivant
-                    else {              // Le noeud racine n'a plus de fils à traiter
-                        file.close();
-                        return;
-                    }
+        while (!feof(file)) {
+            int item = TreeUtil::readNextInt(file,backtrack);
+            if (backtrack) { // Symbole de backtrack, le noeud courant (sommet de pile) n'a plus de fils
+                if (stack.size() >= 2) {
+                    stack.pop();    // Retire le noeud courant de la pile pour traiter le suivant
                 }
-                else {  // Un nouveau noeud à traiter
-                    if (stack.empty()) {    // Si la pile est vide, on n'a pas encore ajouté la racine de l'arbre
-                        stack.push(tree.setRoot(lineToValue(line)).index());
-                    } else {
-                        // Création du noeud associé et ajout du noeud créé en tant que fils du noeud courant
-                        Node & child = tree.addChildFor(stack.top(), lineToValue(line));
-                        stack.push(child.index()); // Traitement du noeud lu en tant noeud courant
-                    }
+                else {              // Le noeud racine n'a plus de fils à traiter
+                    fclose(file);
+                    return;
+                }
+            }
+            else { // Un nouveau noeud à traiter
+                Value value;
+                value.gain = item;
+                value.visitCount = TreeUtil::readNextInt(file,backtrack);
+                value.brix.setAx(TreeUtil::readNextInt(file,backtrack));
+                value.brix.setOx(TreeUtil::readNextInt(file,backtrack));
+                value.brix.setAo(TreeUtil::readNextInt(file,backtrack));
+                value.brix.setOo(TreeUtil::readNextInt(file,backtrack));
+
+                if (stack.empty()) {    // Si la pile est vide, on n'a pas encore ajouté la racine de l'arbre
+                    stack.push(tree.setRoot(value).index());
+                }
+                else {
+                    // Création du noeud associé et ajout du noeud créé en tant que fils du noeud courant
+                    Node & child = tree.addChildFor(stack.top(), value);
+                    stack.push(child.index()); // Traitement du noeud lu en tant noeud courant
                 }
             }
         }
         throw std::invalid_argument("La structure du fichier " + filename + " est invalide.");
-    } else {
+    }
+    else {
         throw std::invalid_argument("Le fichier " + filename + " n'a pas pu être ouvert ou n'existe pas.");
-    }
-}
-
-Value TreeUtil::lineToValue(std::string const& line) {
-    try {
-        Value value;
-        std::istringstream stm(line) ;
-        int word ;
-        stm >> word;
-        value.gain = word;
-        stm >> word;
-        value.visitCount = word;
-        stm >> word;
-        value.brix.setAx(word);
-        stm >> word;
-        value.brix.setOx(word);
-        stm >> word;
-        value.brix.setAo(word);
-        stm >> word;
-        value.brix.setOo(word);
-        value.brix.setDefinie(true);
-        return value;
-    }
-    catch (std::exception const &) {
-        throw std::invalid_argument("Une ligne du fichier est invalide : '" + line + "'.");
     }
 }
 
