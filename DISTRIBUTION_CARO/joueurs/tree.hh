@@ -150,6 +150,14 @@ class Tree {
         }
 
         /**
+         * @brief Vérifie si le tableau de noeuds a atteint sa capacité maximale.
+         * @return Vrai si le tableau a atteint sa capacité maximale, faux sinon.
+         */
+        inline bool isFull() {
+            return _nodes.size() == _nodes.capacity();
+        }
+
+        /**
          * @return Le nombre de noeuds de l'arbre.
          */
         inline size_t nodesCount() const {

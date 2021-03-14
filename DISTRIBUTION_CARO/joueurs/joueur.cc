@@ -1,3 +1,4 @@
+
 #include "joueur.hh"
 
 Joueur::Joueur(std::string nom, bool joueur)

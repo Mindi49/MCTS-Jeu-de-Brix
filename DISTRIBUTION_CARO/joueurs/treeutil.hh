@@ -1,6 +1,6 @@
 #pragma once
-#include "tree.hh"
 #include "node.hh"
+#include "tree.hh"
 #include "value.hh"
 
 #include <fstream>
@@ -17,7 +17,7 @@ class TreeUtil {
          * @throw invalid_argument Si le fichier n'existe pas, n'a pas pu être ouvert ou
          * possède une syntaxe invalide.
          */
-        static void fileToTree (std::string const & filename, Tree & tree);
+        static void fileToTree (std::string const & filename, Tree & tree, size_t nodeCountAllocation=1);
 
         /**
          * @brief Écrit dans un fichier un arbre n-aire.

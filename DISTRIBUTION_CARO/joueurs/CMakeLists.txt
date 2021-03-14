@@ -28,6 +28,7 @@ set(HEADERS
     node.hh
     tree.hh
     treeutil.hh
+    systemutil.hh
     )
 
 add_library(joueurs ${SRCS} ${HEADERS})

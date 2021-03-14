@@ -1,6 +1,7 @@
 #pragma once
-#include <ostream>
 #include "../brix.hh"
+
+#include <ostream>
 
 /**
  * @brief La valeur contenant les informations liées à l'algorithme MCTS.
@@ -14,6 +15,7 @@ struct Value {
         oss << value.toString();
         return oss;
     }
+
     std::string toString() const {
         return std::to_string(gain) + " " + std::to_string(visitCount) + " "
         + std::to_string(brix.getAx()) + " " + std::to_string(brix.getOx()) + " "

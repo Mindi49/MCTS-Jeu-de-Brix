@@ -1,6 +1,7 @@
 #include "treeutil.hh"
 #include "../jeu.hh"
 #include "../arbitre.hh"
+
 #include <cstdlib>
 #include <regex>
 #include <stack>
@@ -22,8 +23,10 @@ void TreeUtil::treeToFile (Tree const & tree, std::string const & filename) {
     }
 }
 
-void TreeUtil::fileToTree(std::string const & filename, Tree & tree) {
+void TreeUtil::fileToTree(std::string const & filename, Tree & tree, size_t nodeCountAllocation) {
     if(!std::ifstream(filename.c_str()).good()) {
+        tree = Tree(nodeCountAllocation);
+        tree.setRoot(Value{0,0,Brix(0,0,0,0)});
         return;
     }
     std::ifstream file(filename);
@@ -33,7 +36,10 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree) {
         std::string line;
         // Lecture du nombre de noeuds
         if (std::getline(file,line)) {
-            tree = Tree(static_cast<size_t>(std::stoi(line) + (50*NB_PIECE_MAX*TEMPS_POUR_UN_COUP)));
+            if (nodeCountAllocation == 1) {
+                nodeCountAllocation = static_cast<size_t>(std::stoi(line));
+            }
+            tree = Tree(nodeCountAllocation);
         }
 
         // Lecture de chaque ligne du fichier
@@ -68,19 +74,19 @@ Value TreeUtil::lineToValue(std::string const& line) {
     try {
         Value value;
         std::istringstream stm(line) ;
-        std::string word ;
+        int word ;
         stm >> word;
-        value.gain = std::stoi(word);
+        value.gain = word;
         stm >> word;
-        value.visitCount = std::stoi(word);
+        value.visitCount = word;
         stm >> word;
-        value.brix.setAx(std::stoi(word));
+        value.brix.setAx(word);
         stm >> word;
-        value.brix.setOx(std::stoi(word));
+        value.brix.setOx(word);
         stm >> word;
-        value.brix.setAo(std::stoi(word));
+        value.brix.setAo(word);
         stm >> word;
-        value.brix.setOo(std::stoi(word));
+        value.brix.setOo(word);
         value.brix.setDefinie(true);
         return value;
     }

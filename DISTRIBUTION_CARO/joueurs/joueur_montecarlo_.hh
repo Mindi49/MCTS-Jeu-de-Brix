@@ -1,10 +1,10 @@
 ﻿#pragma once
-
 #include "joueur.hh"
-#include "treeutil.hh"
-#include "tree.hh"
 #include "node.hh"
+#include "tree.hh"
+#include "treeutil.hh"
 #include "value.hh"
+
 #include <thread>
 
 /// Constante de pondération pour le QUBC
@@ -14,20 +14,21 @@ class Joueur_MonteCarlo_ : public Joueur {
     public:
         /**
          * @brief Constructeur qui initalise le joueur et lit le fichier de sauvegarde s'il est déjà créé.
+         * Alloue la moitié de la RAM pour l'arbre. Sa capacité ne pourra alors pas excéder cette valeur.
          * @param name      Le nom du joueur.
          * @param player    Vrai si on est le joueur qui commence, faux sinon.
          */
         Joueur_MonteCarlo_(std::string name, bool player);
 
         /**
-         * @brief Destructeur qui écrit dans le fichier si toutes les actions ont été réalisées.
+         * @brief Destructeur qui écrit l'arbre dans le fichier si toutes les actions ont été réalisées.
          */
         virtual ~Joueur_MonteCarlo_();
 
         /**
          * @brief Recherche le meilleur coup à jouer pour ce tour.
          * @param game  L'état du jeu sur lequel on doit jouer.
-         * @param move  La brix à modifier par notre prochain coup
+         * @param move  La brix à modifier par notre prochain coup.
          */
         void recherche_coup(Jeu game, Brix & move) override;
 
@@ -37,7 +38,7 @@ class Joueur_MonteCarlo_ : public Joueur {
         /**
          * @brief Met à jour l'arbre pour prendre en compte le dernier coup joué par l'adversaire.
          * @param move  Le coup joué par l'adversaire au dernier tour.
-         * @param game  L'état du jeu après que l'adversaire n'ait joué.
+         * @param game  L'état du jeu après que l'adversaire ait joué.
          */
         void playOpponentMove(Brix const & move, Jeu const & game);
 
@@ -49,13 +50,13 @@ class Joueur_MonteCarlo_ : public Joueur {
         Node::Index processMCTS(Jeu game);
 
         /**
-         * @brief Choisis le meilleur noeud parmi les noeuds enfants.
+         * @brief Choisit le meilleur noeud parmi les noeuds enfants.
          * @return L'indice du meilleur noeud.
          */
         Node::Index chooseBestChildNode() const;
 
         /**
-         * @brief Simule en boucle des scénarios de MCTS en fonction de TEMPS_POUR_UN_COUP.
+         * @brief Simule en boucle des scénarios de MCTS tant qu'on peut.
          * @param game  Le jeu à partir duquel on simule les scénarios.
          */
         void processLoopingMCTS(Jeu game);
@@ -118,12 +119,13 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @brief Recherche une brix dans un ensemble de brixs.
          * @param brixs Un ensemble de brixs.
          * @param b     La brix que l'on recherche.
-         * @return Un iterator pointant sur la brix correspondante
+         * @return Un iterator pointant sur la brix correspondante.
          */
         std::vector<Brix>::const_iterator findBrix(std::vector<Brix> const & brixs, Brix const & b) const;
 
-        /// Vrai si on peut écrire dans l'arbre, faux sinon
-        bool _canWrite;
+
+        /// L'indice de la racine "courante", à partir duquel faire la recherche
+        Node::Index _currentRoot;
 
         /// L'arbre d'exploration
         static Tree _tree;
@@ -131,6 +133,12 @@ class Joueur_MonteCarlo_ : public Joueur {
         /// Vrai si l'arbre a déjà été créé (lu), faux sinon
         static bool _created;
 
-        /// L'indice de la racine "courante", à partir duquel faire la recherche
-        Node::Index _currentRoot;
+        /// Vrai tant qu'on peut faire du MCTS, faux sinon
+        static bool _canProcessMCTS;
+
+        /// Vrai si on peut écrire dans l'arbre, faux sinon
+        static bool _canWrite;
+
+        /// Mutex permettant l'écriture exclusive dans l'arbre
+        static std::mutex _treeLock;
 };
