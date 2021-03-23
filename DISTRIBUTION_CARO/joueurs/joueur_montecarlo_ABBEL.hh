@@ -1,16 +1,16 @@
 ﻿#pragma once
 #include "joueur.hh"
-#include "node.hh"
-#include "tree.hh"
-#include "treeutil.hh"
-#include "value.hh"
+#include "node_ABBEL.hh"
+#include "tree_ABBEL.hh"
+#include "treeutil_ABBEL.hh"
+#include "value_ABBEL.hh"
 
 #include <thread>
 
 /// Constante de pondération pour le QUBC
 #define POND_C 2
 
-class Joueur_MonteCarlo_ : public Joueur {
+class Joueur_MonteCarlo_ABBEL : public Joueur {
     public:
         /**
          * @brief Constructeur qui initalise le joueur et lit le fichier de sauvegarde s'il est déjà créé.
@@ -18,12 +18,12 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param name      Le nom du joueur.
          * @param player    Vrai si on est le joueur qui commence, faux sinon.
          */
-        Joueur_MonteCarlo_(std::string name, bool player);
+        Joueur_MonteCarlo_ABBEL(std::string name, bool player);
 
         /**
          * @brief Destructeur qui écrit l'arbre dans le fichier si toutes les actions ont été réalisées.
          */
-        virtual ~Joueur_MonteCarlo_();
+        virtual ~Joueur_MonteCarlo_ABBEL();
 
         /**
          * @brief Recherche le meilleur coup à jouer pour ce tour.
@@ -47,13 +47,13 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param game  Le jeu courant.
          * @return L'indice du noeud créé (par growth) pendant le MCTS.
          */
-        Node::Index processMCTS(Jeu game);
+        Node_ABBEL::Index processMCTS(Jeu game);
 
         /**
          * @brief Choisit le meilleur noeud parmi les noeuds enfants.
          * @return L'indice du meilleur noeud.
          */
-        Node::Index chooseBestChildNode() const;
+        Node_ABBEL::Index chooseBestChildNode() const;
 
         /**
          * @brief Simule en boucle des scénarios de MCTS tant qu'on peut.
@@ -67,14 +67,14 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param game              Le jeu sur lequel on effectue la descente.
          * @return L'indice du noeud créé par growth.
          */
-        Node::Index descent(Node::Index currentNodeIndex, Jeu & game);
+        Node_ABBEL::Index descent(Node_ABBEL::Index currentNodeIndex, Jeu & game);
 
         /**
          * @brief Recherche le noeud enfant ayant le meilleur QUBC pour continuer la descente sur ce noeud.
          * @param nodeIndex L'indice du noeud pour lequel on recherche l'enfant au meilleur QUBC.
          * @return L'indice du noeud enfant ayant le meilleur QUBC.
          */
-        Node::Index findBestQUBC(Node::Index nodeIndex) const;
+        Node_ABBEL::Index findBestQUBC(Node_ABBEL::Index nodeIndex) const;
 
         /**
          * @brief Calcule le QUBC d'un noeud de l'arbre.
@@ -82,7 +82,7 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param parentNodeIndex   Le noeud parent du noeud pour lequel on caclule le QUBC.
          * @return Le QUBC du noeud.
          */
-        float calculateNodeQUBC(Node::Index nodeIndex, Node::Index parentNodeIndex) const;
+        float calculateNodeQUBC(Node_ABBEL::Index nodeIndex, Node_ABBEL::Index parentNodeIndex) const;
 
         /**
          * @brief Effectue l'étape de growth de l'algorithme du MCTS.
@@ -90,7 +90,7 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param move              La brix du coup joué pour atteindre ce noeud.
          * @return L'indice du noeud créé.
          */
-        Node::Index growth(Node::Index currentNodeIndex, Brix const & move);
+        Node_ABBEL::Index growth(Node_ABBEL::Index currentNodeIndex, Brix const & move);
 
         /**
          * @brief Effectue l'étape de rollout de l'algorithme du MCTS.
@@ -105,7 +105,7 @@ class Joueur_MonteCarlo_ : public Joueur {
          * @param currentNodeIndex  L'indice du noeud à partir duquel on met à jour les informations.
          * @param gain              Le gain à faire remonter.
          */
-        void update(Node::Index currentNodeIndex, int gain);
+        void update(Node_ABBEL::Index currentNodeIndex, int gain);
 
 
         /**
@@ -125,10 +125,10 @@ class Joueur_MonteCarlo_ : public Joueur {
 
 
         /// L'indice de la racine "courante", à partir duquel faire la recherche
-        Node::Index _currentRoot;
+        Node_ABBEL::Index _currentRoot;
 
         /// L'arbre d'exploration
-        static Tree _tree;
+        static Tree_ABBEL _tree;
 
         /// Vrai si l'arbre a déjà été créé (lu), faux sinon
         static bool _created;

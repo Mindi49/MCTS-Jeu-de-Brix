@@ -8,7 +8,7 @@
 /**
  * @brief Utilitaire pour la récupérations d'informations sur la RAM.
  */
-class SystemUtil {
+class SystemUtil_ABBEL {
     public:
         /**
          * @brief Récupère la taille de la RAM en octets.
@@ -33,7 +33,7 @@ class SystemUtil {
         }
 
     private:
-        SystemUtil() = delete;
-        SystemUtil(SystemUtil const & s) = delete;
-        SystemUtil & operator=(SystemUtil const & s) = delete;
+        SystemUtil_ABBEL() = delete;
+        SystemUtil_ABBEL(SystemUtil_ABBEL const & s) = delete;
+        SystemUtil_ABBEL & operator=(SystemUtil_ABBEL const & s) = delete;
 };

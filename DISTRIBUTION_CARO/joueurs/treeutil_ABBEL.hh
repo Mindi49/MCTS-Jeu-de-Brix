@@ -1,14 +1,14 @@
 #pragma once
-#include "node.hh"
-#include "tree.hh"
-#include "value.hh"
+#include "node_ABBEL.hh"
+#include "tree_ABBEL.hh"
+#include "value_ABBEL.hh"
 
 #include <fstream>
 
 /**
  * @brief Utilitaire pour le stockage d'arbres n-aires dans des fichiers.
  */
-class TreeUtil {
+class TreeUtil_ABBEL {
     public:
         /**
          * @brief Crée un arbre n-aire à partir d'un fichier texte.
@@ -17,14 +17,14 @@ class TreeUtil {
          * @throw invalid_argument Si le fichier n'existe pas, n'a pas pu être ouvert ou
          * possède une syntaxe invalide.
          */
-        static void fileToTree (std::string const & filename, Tree & tree, size_t nodeCountAllocation=1);
+        static void fileToTree (std::string const & filename, Tree_ABBEL & tree, size_t nodeCountAllocation=1);
 
         /**
          * @brief Écrit dans un fichier un arbre n-aire.
          * @param tree      L'arbre à écrire.
          * @param filename  Le nom du fichier dans lequel est réalisée l'écriture.
          */
-        static void treeToFile (Tree const & tree, std::string const & filename);
+        static void treeToFile (Tree_ABBEL const & tree, std::string const & filename);
 
         /**
          * @brief Génère l'arbre aléatoire avec les spécificités passées en paramètre.
@@ -32,7 +32,7 @@ class TreeUtil {
          * @param maxDepth          La profondeur maximale de l'abre.
          * @param maxChildrenCount  Le nombre maximum d'enfants que peut avoir chaque noeud.
          */
-        static void generateRandomTree(Tree & tree, int maxDepth, int maxChildrenCount);
+        static void generateRandomTree(Tree_ABBEL & tree, int maxDepth, int maxChildrenCount);
 
     private:
         /**
@@ -49,7 +49,7 @@ class TreeUtil {
          * @param tree  L'arbre dont il faut écrire les noeuds.
          * @param file  Le fichier dans lequel on est en train d'écrire.
          */
-        static void writeNode (Node const & node, Tree const & tree, std::ofstream & file);
+        static void writeNode (Node_ABBEL const & node, Tree_ABBEL const & tree, std::ofstream & file);
 
         /**
          * @brief Génère à partir d'un noeud racine un arbre aléatoire de manière récursive.
@@ -58,13 +58,13 @@ class TreeUtil {
          * @param maxDepth          La profondeur maximale de l'abre.
          * @param maxChildrenCount  Le nombre maximum d'enfants que peut avoir chaque noeud.
          */
-        static void generateChildren(Tree & tree, Node & node, int maxDepth, int maxChildrenCount);
+        static void generateChildren(Tree_ABBEL & tree, Node_ABBEL & node, int maxDepth, int maxChildrenCount);
 
         /**
          * @brief Génère une valeur aléatoire.
          * @return La valeur aléatoire créée.
          */
-        static Value generateRandomValue();
+        static Value_ABBEL generateRandomValue();
 
         /**
          * @brief Lit le prochain nombre ou signe du fichier.
@@ -99,9 +99,9 @@ class TreeUtil {
 
 
 
-        TreeUtil() = delete;
+        TreeUtil_ABBEL() = delete;
 
-        TreeUtil(TreeUtil const & t) = delete;
+        TreeUtil_ABBEL(TreeUtil_ABBEL const & t) = delete;
 
-        TreeUtil & operator=(TreeUtil const & t) = delete;
+        TreeUtil_ABBEL & operator=(TreeUtil_ABBEL const & t) = delete;
 };

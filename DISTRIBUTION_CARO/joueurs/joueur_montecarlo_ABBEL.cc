@@ -1,5 +1,5 @@
-#include "joueur_montecarlo_.hh"
-#include "systemutil.hh"
+#include "joueur_montecarlo_ABBEL.hh"
+#include "systemutil_ABBEL.hh"
 #include "../arbitre.hh"
 
 #include <algorithm>
@@ -11,36 +11,37 @@
 #include <math.h>
 
 
-Tree Joueur_MonteCarlo_::_tree;
-bool Joueur_MonteCarlo_::_created(false);
-bool Joueur_MonteCarlo_::_canProcessMCTS(true);
-bool Joueur_MonteCarlo_::_canWrite(false);
-std::mutex Joueur_MonteCarlo_::_treeLock;
+Tree_ABBEL Joueur_MonteCarlo_ABBEL::_tree;
+bool Joueur_MonteCarlo_ABBEL::_created(false);
+bool Joueur_MonteCarlo_ABBEL::_canProcessMCTS(true);
+bool Joueur_MonteCarlo_ABBEL::_canWrite(false);
+std::mutex Joueur_MonteCarlo_ABBEL::_treeLock;
 
+using Index = Node_ABBEL::Index;
 
-Joueur_MonteCarlo_::Joueur_MonteCarlo_(std::string name, bool player) : Joueur(name,player) {
+Joueur_MonteCarlo_ABBEL::Joueur_MonteCarlo_ABBEL(std::string name, bool player) : Joueur(name,player) {
     std::ios_base::sync_with_stdio(false);
     if(!_created) {
-        size_t nodeCountAllocation = SystemUtil::getMemorySize()/(2*sizeof(Node))*1000;
-        TreeUtil::fileToTree("ABBEL_save.MCTS", _tree, nodeCountAllocation);
+        size_t nodeCountAllocation = SystemUtil_ABBEL::getMemorySize()/(2*sizeof(Node_ABBEL))*1000;
+        TreeUtil_ABBEL::fileToTree("ABBEL_save.MCTS", _tree, nodeCountAllocation);
         _created = true;
     }
     _currentRoot = _tree.getRoot().index();
 }
 
 
-Joueur_MonteCarlo_::~Joueur_MonteCarlo_() {
+Joueur_MonteCarlo_ABBEL::~Joueur_MonteCarlo_ABBEL() {
     _canProcessMCTS = false;
     _treeLock.lock();
     _treeLock.unlock();
     // À commenter lors du tournoi
 //    if (_canWrite) {
-//        TreeUtil::treeToFile(_tree,"ABBEL_save.MCTS");
+//        TreeUtil_ABBEL::treeToFile(_tree,"ABBEL_save.MCTS");
 //    }
 }
 
 
-void Joueur_MonteCarlo_::recherche_coup(Jeu game, Brix & move) {
+void Joueur_MonteCarlo_ABBEL::recherche_coup(Jeu game, Brix & move) {
     _canProcessMCTS = false;
     _canWrite = false;
 
@@ -73,14 +74,14 @@ void Joueur_MonteCarlo_::recherche_coup(Jeu game, Brix & move) {
 
     // Lance le thread qui réalise le MCTS en boucle
     game.joue(newMove);
-    std::thread(&Joueur_MonteCarlo_::processLoopingMCTS,this,game).detach();
+    std::thread(&Joueur_MonteCarlo_ABBEL::processLoopingMCTS,this,game).detach();
 }
 
 
-void Joueur_MonteCarlo_::playOpponentMove(Brix const & opponentMove, Jeu const & game) {
+void Joueur_MonteCarlo_ABBEL::playOpponentMove(Brix const & opponentMove, Jeu const & game) {
     // Cherche le noeud fils correspondant au coup joué par l'adversaire
-    std::vector<Node::Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
-    std::vector<Node::Index>::const_iterator const & it(std::find_if(indexesChildren.begin(), indexesChildren.end(), [&opponentMove](Node::Index const & child) {
+    std::vector<Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
+    std::vector<Index>::const_iterator const & it(std::find_if(indexesChildren.begin(), indexesChildren.end(), [&opponentMove](Index const & child) {
         Brix const & brix(_tree.getNodeFromIndex(child).value().brix);
         return opponentMove.getAx() == brix.getAx() && opponentMove.getOx() == brix.getOx() && opponentMove.getAo() == brix.getAo() && opponentMove.getOo() == brix.getOo();
     }));
@@ -95,26 +96,26 @@ void Joueur_MonteCarlo_::playOpponentMove(Brix const & opponentMove, Jeu const &
 }
 
 
-Node::Index Joueur_MonteCarlo_::processMCTS(Jeu game) {
+Index Joueur_MonteCarlo_ABBEL::processMCTS(Jeu game) {
     Jeu currentGame = game;
-    Node::Index const & grownNodeIndex(descent(_currentRoot,currentGame));
+    Index const & grownNodeIndex(descent(_currentRoot,currentGame));
     int gain = rollout(currentGame);
     update(grownNodeIndex, gain);
     return grownNodeIndex;
 }
 
 
-Node::Index Joueur_MonteCarlo_::chooseBestChildNode() const {
-    std::vector<Node::Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
-    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [](Node::Index const & nodeIndex1, Node::Index const & nodeIndex2) {
-        Value const & nodeValue1(_tree.getNodeFromIndex(nodeIndex1).value());
-        Value const & nodeValue2(_tree.getNodeFromIndex(nodeIndex2).value());
+Index Joueur_MonteCarlo_ABBEL::chooseBestChildNode() const {
+    std::vector<Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
+    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [](Index const & nodeIndex1, Index const & nodeIndex2) {
+        Value_ABBEL const & nodeValue1(_tree.getNodeFromIndex(nodeIndex1).value());
+        Value_ABBEL const & nodeValue2(_tree.getNodeFromIndex(nodeIndex2).value());
         return float(nodeValue1.gain)/nodeValue1.visitCount < float(nodeValue2.gain)/nodeValue2.visitCount;
     });
 }
 
 
-void Joueur_MonteCarlo_::processLoopingMCTS(Jeu game) {
+void Joueur_MonteCarlo_ABBEL::processLoopingMCTS(Jeu game) {
     _treeLock.lock();
     _canProcessMCTS = true;
     while (_canProcessMCTS && !_tree.isFull()) {
@@ -125,15 +126,15 @@ void Joueur_MonteCarlo_::processLoopingMCTS(Jeu game) {
 }
 
 
-Node::Index Joueur_MonteCarlo_::descent(Node::Index currentNodeIndex, Jeu & game){
+Index Joueur_MonteCarlo_ABBEL::descent(Index currentNodeIndex, Jeu & game){
     std::vector<Brix> const & legalMoves(findLegalMoves(game));
     if (!legalMoves.empty()) {
-        Node & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
+        Node_ABBEL & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
         size_t currentNodeChildrenCount(currentNode.childrenCount());
 
         if (currentNodeChildrenCount < legalMoves.size()) { // Il reste des coups licites non explorés
             std::vector<Brix> exploredMoves;
-            for (Node::Index const & childIndex : currentNode.indexesChildren()) {
+            for (Index const & childIndex : currentNode.indexesChildren()) {
                 exploredMoves.push_back(_tree.getNodeFromIndex(childIndex).value().brix);
             }
 
@@ -150,7 +151,7 @@ Node::Index Joueur_MonteCarlo_::descent(Node::Index currentNodeIndex, Jeu & game
             return growth(currentNodeIndex,move);
         }
         else { // On a exploré au moins une fois tous les coups licites à partir de ce noeud
-            Node::Index const & bestNodeIndex(findBestQUBC(currentNodeIndex));
+            Index const & bestNodeIndex(findBestQUBC(currentNodeIndex));
             game.joue(_tree.getNodeFromIndex(bestNodeIndex).value().brix);
             return descent(bestNodeIndex,game);
         }
@@ -160,28 +161,28 @@ Node::Index Joueur_MonteCarlo_::descent(Node::Index currentNodeIndex, Jeu & game
 }
 
 
-float Joueur_MonteCarlo_::calculateNodeQUBC(Node::Index nodeIndex, Node::Index parentNodeIndex) const {
-    Value const & nodeValue(_tree.getNodeFromIndex(nodeIndex).value());
-    Value const & parentNodeValue(_tree.getNodeFromIndex(parentNodeIndex).value());
-    return (nodeValue.gain / nodeValue.visitCount) + sqrtf(POND_C * (logf(parentNodeValue.visitCount) / nodeValue.visitCount));
-}
-
-
-Node::Index Joueur_MonteCarlo_::findBestQUBC(Node::Index nodeIndex) const {
-    std::vector<Node::Index> const & indexesChildren(_tree.getNodeFromIndex(nodeIndex).indexesChildren());
+Index Joueur_MonteCarlo_ABBEL::findBestQUBC(Index nodeIndex) const {
+    std::vector<Index> const & indexesChildren(_tree.getNodeFromIndex(nodeIndex).indexesChildren());
     return *std::max_element(indexesChildren.begin(), indexesChildren.end(),
-    [this,&nodeIndex](Node::Index const & childNodeIndex1, Node::Index const & childNodeIndex2) {
+    [this,&nodeIndex](Index const & childNodeIndex1, Index const & childNodeIndex2) {
         return calculateNodeQUBC(childNodeIndex1,nodeIndex) < calculateNodeQUBC(childNodeIndex2,nodeIndex);
     });
 }
 
 
-Node::Index Joueur_MonteCarlo_::growth(Node::Index currentNodeIndex, Brix const & move) {
-    return _tree.addChildFor(currentNodeIndex, Value{0,0,move}).index();
+float Joueur_MonteCarlo_ABBEL::calculateNodeQUBC(Index nodeIndex, Index parentNodeIndex) const {
+    Value_ABBEL const & nodeValue(_tree.getNodeFromIndex(nodeIndex).value());
+    Value_ABBEL const & parentNodeValue(_tree.getNodeFromIndex(parentNodeIndex).value());
+    return (nodeValue.gain / nodeValue.visitCount) + sqrtf(POND_C * (logf(parentNodeValue.visitCount) / nodeValue.visitCount));
 }
 
 
-int Joueur_MonteCarlo_::rollout (Jeu game) {
+Index Joueur_MonteCarlo_ABBEL::growth(Index currentNodeIndex, Brix const & move) {
+    return _tree.addChildFor(currentNodeIndex, Value_ABBEL{0,0,move}).index();
+}
+
+
+int Joueur_MonteCarlo_ABBEL::rollout (Jeu game) {
     while (!game.fini()) {
         std::vector<Brix> const & legalMoves = findLegalMoves(game);
         game.joue(legalMoves[static_cast<size_t>(rand()) % legalMoves.size()]);
@@ -196,8 +197,8 @@ int Joueur_MonteCarlo_::rollout (Jeu game) {
 }
 
 
-void Joueur_MonteCarlo_::update (Node::Index currentNodeIndex, int gain) {
-    Node & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
+void Joueur_MonteCarlo_ABBEL::update (Index currentNodeIndex, int gain) {
+    Node_ABBEL & currentNode(_tree.getNodeFromIndex(currentNodeIndex));
     currentNode.value().gain += gain;
     currentNode.value().visitCount++;
     if (!_tree.isRoot(currentNode)) {
@@ -206,7 +207,7 @@ void Joueur_MonteCarlo_::update (Node::Index currentNodeIndex, int gain) {
 }
 
 
-std::vector<Brix> Joueur_MonteCarlo_::findLegalMoves(Jeu const & game) const{
+std::vector<Brix> Joueur_MonteCarlo_ABBEL::findLegalMoves(Jeu const & game) const{
     std::vector<Brix> legalMoves;
     legalMoves.reserve(20);
     Brix b_canditate;
@@ -243,7 +244,7 @@ std::vector<Brix> Joueur_MonteCarlo_::findLegalMoves(Jeu const & game) const{
 }
 
 
-std::vector<Brix>::const_iterator Joueur_MonteCarlo_::findBrix(std::vector<Brix> const & brixs, Brix const & b) const {
+std::vector<Brix>::const_iterator Joueur_MonteCarlo_ABBEL::findBrix(std::vector<Brix> const & brixs, Brix const & b) const {
     return std::find_if(brixs.begin(),brixs.end(),[&b](Brix const & brix) {
         return brix.getAx() == b.getAx() && brix.getOx() == b.getOx() && brix.getAo() == b.getAo() && brix.getOo() == b.getOo();
     });

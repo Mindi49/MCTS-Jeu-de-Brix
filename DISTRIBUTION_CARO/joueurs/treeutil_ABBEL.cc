@@ -1,4 +1,4 @@
-#include "treeutil.hh"
+#include "treeutil_ABBEL.hh"
 #include "../jeu.hh"
 #include "../arbitre.hh"
 
@@ -6,15 +6,15 @@
 #include <regex>
 #include <stack>
 
-void TreeUtil::writeNode (Node const & node, Tree const & tree, std::ofstream & file) {
+void TreeUtil_ABBEL::writeNode (Node_ABBEL const & node, Tree_ABBEL const & tree, std::ofstream & file) {
     file << node.value() << "\n";  // Écriture de la valeur du noeud
-    for (Node::Index const & i : node.indexesChildren()) {
+    for (Node_ABBEL::Index const & i : node.indexesChildren()) {
         writeNode(tree.getNodeFromIndex(i), tree, file); // Écrit chaque noeud fils
     }
     file << "<\n";  // Le noeud courant n'a plus d'enfants, signal de backtrack
 }
 
-void TreeUtil::treeToFile (Tree const & tree, std::string const & filename) {
+void TreeUtil_ABBEL::treeToFile (Tree_ABBEL const & tree, std::string const & filename) {
     std::ofstream file(filename);
     if (file.is_open()) {
         file << tree.nodesCount() << "\n";
@@ -23,28 +23,28 @@ void TreeUtil::treeToFile (Tree const & tree, std::string const & filename) {
     }
 }
 
-void TreeUtil::fileToTree(std::string const & filename, Tree & tree, size_t nodeCountAllocation) {
+void TreeUtil_ABBEL::fileToTree(std::string const & filename, Tree_ABBEL & tree, size_t nodeCountAllocation) {
     if(!std::ifstream(filename.c_str()).good()) {
-        tree = Tree(nodeCountAllocation);
-        tree.setRoot(Value{0,0,Brix(0,0,0,0)});
+        tree = Tree_ABBEL(nodeCountAllocation);
+        tree.setRoot(Value_ABBEL{0,0,Brix(0,0,0,0)});
         return;
     }
 
     FILE *file;
     file = fopen(filename.c_str(), "r");
     if (file != NULL) {
-        std::stack<Node::Index> stack;
+        std::stack<Node_ABBEL::Index> stack;
         // Le sommet de pile représente l'index du noeud courant
         bool backtrack;
-        int treeNodesCount = TreeUtil::readNextInt(file,backtrack);
+        int treeNodesCount = TreeUtil_ABBEL::readNextInt(file,backtrack);
         if (nodeCountAllocation == 1) {
             nodeCountAllocation = static_cast<size_t>(treeNodesCount);
         }
-        tree = Tree(nodeCountAllocation);
+        tree = Tree_ABBEL(nodeCountAllocation);
 
         // Lecture de chaque ligne du fichier
         while (!feof(file)) {
-            int item = TreeUtil::readNextInt(file,backtrack);
+            int item = TreeUtil_ABBEL::readNextInt(file,backtrack);
             if (backtrack) { // Symbole de backtrack, le noeud courant (sommet de pile) n'a plus de fils
                 if (stack.size() >= 2) {
                     stack.pop();    // Retire le noeud courant de la pile pour traiter le suivant
@@ -55,20 +55,20 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree, size_t node
                 }
             }
             else { // Un nouveau noeud à traiter
-                Value value;
+                Value_ABBEL value;
                 value.gain = item;
-                value.visitCount = TreeUtil::readNextInt(file,backtrack);
-                value.brix.setAx(TreeUtil::readNextInt(file,backtrack));
-                value.brix.setOx(TreeUtil::readNextInt(file,backtrack));
-                value.brix.setAo(TreeUtil::readNextInt(file,backtrack));
-                value.brix.setOo(TreeUtil::readNextInt(file,backtrack));
+                value.visitCount = TreeUtil_ABBEL::readNextInt(file,backtrack);
+                value.brix.setAx(TreeUtil_ABBEL::readNextInt(file,backtrack));
+                value.brix.setOx(TreeUtil_ABBEL::readNextInt(file,backtrack));
+                value.brix.setAo(TreeUtil_ABBEL::readNextInt(file,backtrack));
+                value.brix.setOo(TreeUtil_ABBEL::readNextInt(file,backtrack));
 
                 if (stack.empty()) {    // Si la pile est vide, on n'a pas encore ajouté la racine de l'arbre
                     stack.push(tree.setRoot(value).index());
                 }
                 else {
                     // Création du noeud associé et ajout du noeud créé en tant que fils du noeud courant
-                    Node & child = tree.addChildFor(stack.top(), value);
+                    Node_ABBEL & child = tree.addChildFor(stack.top(), value);
                     stack.push(child.index()); // Traitement du noeud lu en tant noeud courant
                 }
             }
@@ -80,25 +80,25 @@ void TreeUtil::fileToTree(std::string const & filename, Tree & tree, size_t node
     }
 }
 
-void TreeUtil::generateRandomTree(Tree & tree, int maxDepth, int maxChildrenCount) {
+void TreeUtil_ABBEL::generateRandomTree(Tree_ABBEL & tree, int maxDepth, int maxChildrenCount) {
     srand(static_cast<unsigned int>(time(nullptr)));
     generateChildren(tree, tree.setRoot(generateRandomValue()), maxDepth, maxChildrenCount);
 }
 
-void TreeUtil::generateChildren(Tree & tree, Node & node, int maxDepth, int maxChildrenCount) {
-    Node::Index index = node.index();
+void TreeUtil_ABBEL::generateChildren(Tree_ABBEL & tree, Node_ABBEL & node, int maxDepth, int maxChildrenCount) {
+    Node_ABBEL::Index index = node.index();
     if (maxDepth > 1) {     // Permet de stopper à une profondeur donnée
         int childrenCount = rand() % maxChildrenCount + 1;    // Choix d'un nombre aléatoire d'enfants pour le noeud courant
         for (int i(0); i < childrenCount; i++) {
             // Création des noeuds fils
-            Node & child = tree.addChildFor(index, generateRandomValue()); // Valeur aléatoire du noeud
-            TreeUtil::generateChildren(tree, child, maxDepth - (rand() % 2 + 1), maxChildrenCount);
+            Node_ABBEL & child = tree.addChildFor(index, generateRandomValue()); // Valeur aléatoire du noeud
+            TreeUtil_ABBEL::generateChildren(tree, child, maxDepth - (rand() % 2 + 1), maxChildrenCount);
         }
     }
 }
 
-Value TreeUtil::generateRandomValue() {
+Value_ABBEL TreeUtil_ABBEL::generateRandomValue() {
     int gain = rand() % 50;
     int lose = rand() % 50;
-    return Value{gain, gain + lose, Brix(1,1,1,1)};
+    return Value_ABBEL{gain, gain + lose, Brix(1,1,1,1)};
 }

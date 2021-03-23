@@ -1,5 +1,5 @@
 #pragma once
-#include "value.hh"
+#include "value_ABBEL.hh"
 
 #include <limits>
 #include <vector>
@@ -8,8 +8,8 @@
  * @brief Représentation d'un noeud d'un arbre.
  * @see Tree
  */
-class Tree;
-class Node {
+class Tree_ABBEL;
+class Node_ABBEL {
     public:
         /**
          * @brief Représentation d'un indice de tableau.
@@ -17,7 +17,7 @@ class Node {
         struct Index {
             public:
                 Index() : _value(std::numeric_limits<size_t>::max()) {}
-            public:
+            private:
                 Index(size_t value) : _value(value) {}
 
                 inline bool isValid() const { return _value != std::numeric_limits<size_t>::max(); }
@@ -25,7 +25,7 @@ class Node {
                 inline void setValue(size_t value) { _value = value; }
 
                 size_t _value = std::numeric_limits<size_t>::max();
-                friend Tree;
+                friend Tree_ABBEL;
         };
 
         /**
@@ -35,22 +35,22 @@ class Node {
          * @param parentIndex L'indice du parent de ce noeud dans l'arbre. Doit correspondre
          * à un indice invalide si le noeud ne possède pas de parent (racine).
          */
-        Node(Value const & value, Index const & index, Index const & parentIndex)
+        Node_ABBEL(Value_ABBEL const & value, Index const & index, Index const & parentIndex)
             : _value(value), _index(index), _parentIndex(parentIndex), _indexesChildren() {}
 
-        Node(Node const & node) = default;
+        Node_ABBEL(Node_ABBEL const & node) = default;
 
         /**
          * @return La valeur du noeud.
          */
-        Value const & value() const {
+        Value_ABBEL const & value() const {
             return _value;
         }
 
         /**
          * @return La valeur du noeud.
          */
-        Value & value() {
+        Value_ABBEL & value() {
             return _value;
         }
 
@@ -92,7 +92,7 @@ class Node {
         }
 
         /// La valeur du noeud.
-        Value _value;
+        Value_ABBEL _value;
 
         /// L'indice du noeud lui-même, dans l'arbre.
         Index _index;
@@ -103,5 +103,5 @@ class Node {
         /// L'ensemble des indices des enfants.
         std::vector<Index> _indexesChildren;
 
-        friend Tree;
+        friend Tree_ABBEL;
 };

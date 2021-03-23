@@ -1,6 +1,6 @@
 #pragma once
-#include "node.hh"
-#include "value.hh"
+#include "node_ABBEL.hh"
+#include "value_ABBEL.hh"
 
 #include <iostream>
 #include <stdexcept>
@@ -10,7 +10,7 @@
  * @brief Représentation d'un arbre n-aire.
  * Cette classe contient les informations de la racine de l'arbre.
  */
-class Tree {
+class Tree_ABBEL {
     public:
         /**
         * @brief Constructeur de l'arbre.
@@ -19,14 +19,14 @@ class Tree {
         * À préciser uniquement si on connaît le nombre de noeuds et que l'on souhaite
         * optimiser la création de l'arbre.
         */
-        Tree(size_t nodeCount = 1) {
+        Tree_ABBEL(size_t nodeCount = 1) {
             _nodes.reserve(nodeCount > 0 ? nodeCount : 1);
         }
 
         /**
          * @brief Constructeur par recopie.
         */
-        Tree(Tree const & tree) {
+        Tree_ABBEL(Tree_ABBEL const & tree) {
             _nodes.reserve(tree._nodes.capacity());
             _nodes = tree._nodes;
         }
@@ -39,7 +39,7 @@ class Tree {
          * @throw invalid_argument Si l'index du noeud parent passé en paramètre est un index invalide.
          * @return Une référence du noeud qui vient d'être créé.
          */
-        inline Node & addChildFor(Node::Index const & index, Value const & value) {
+        inline Node_ABBEL & addChildFor(Node_ABBEL::Index const & index, Value_ABBEL const & value) {
             return addChildFor(getNodeFromIndex(index), value);
         }
 
@@ -51,12 +51,12 @@ class Tree {
          * @throw invalid_argument Si le noeud parent passé en paramètre n'est pas présent dans l'arbre.
          * @return Une référence du noeud qui vient d'être créé.
          */
-        inline Node & addChildFor(Node const & node, Value const & value) {
+        inline Node_ABBEL & addChildFor(Node_ABBEL const & node, Value_ABBEL const & value) {
             if (!isNodePresent(node)) {
                 throw std::invalid_argument("Le noeud renseigné n'est pas présent dans l'arbre.");
             }
-            Node::Index const indexNode = node.index();
-            _nodes.emplace_back(value, Node::Index{nodesCount()}, indexNode);
+            Node_ABBEL::Index const indexNode = node.index();
+            _nodes.emplace_back(value, Node_ABBEL::Index{nodesCount()}, indexNode);
             _nodes[indexNode.value()].addChildIndex(_nodes.back().index());
             return _nodes.back();
         }
@@ -67,7 +67,7 @@ class Tree {
          * @throw invalid_argument Si l'index passé en paramètre est invalide.
          * @return Une référence du noeud dont l'indice est spécifié.
          */
-        inline Node & getNodeFromIndex(Node::Index const & index) {
+        inline Node_ABBEL & getNodeFromIndex(Node_ABBEL::Index const & index) {
               if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
               }
@@ -80,7 +80,7 @@ class Tree {
          * @throw invalid_argument Si l'index passé en paramètre est invalide.
          * @return Une référence constante du noeud dont l'indice est spécifié.
          */
-        inline Node const & getNodeFromIndex(Node::Index const & index) const {
+        inline Node_ABBEL const & getNodeFromIndex(Node_ABBEL::Index const & index) const {
               if (index.value() < nodesCount()) {
                 return _nodes[index.value()];
               }
@@ -93,7 +93,7 @@ class Tree {
          *
          * @see setRoot
          */
-        inline Node & getRoot() {
+        inline Node_ABBEL & getRoot() {
               if (nodesCount() > 0) {
                 return _nodes[0];
               }
@@ -106,7 +106,7 @@ class Tree {
          *
          * @see setRoot
          */
-        inline Node const & getRoot() const {
+        inline Node_ABBEL const & getRoot() const {
               if (nodesCount() > 0) {
                 return _nodes[0];
               }
@@ -118,8 +118,8 @@ class Tree {
          * @param value La valeur de la racine de l'arbre.
          * @return Une référence de la racine.
          */
-        inline Node & setRoot(Value const & value) {
-            _nodes.emplace(_nodes.begin(), value, Node::Index{0}, Node::Index{});
+        inline Node_ABBEL & setRoot(Value_ABBEL const & value) {
+            _nodes.emplace(_nodes.begin(), value, Node_ABBEL::Index{0}, Node_ABBEL::Index{});
             return _nodes[0];
         }
 
@@ -128,7 +128,7 @@ class Tree {
          * @param node  Le noeud en question.
          * @return Vrai si le noeud est la racine de l'arbre, faux sinon.
          */
-        inline bool isRoot(Node const & node) const {
+        inline bool isRoot(Node_ABBEL const & node) const {
             return nodesCount() > 0 && &_nodes[0] == &node;
         }
 
@@ -137,7 +137,7 @@ class Tree {
          * @param node  Le noeud en question.
          * @return Vrai si le noeud est une feuille de l'arbre, faux sinon.
          */
-        inline bool isLeaf(Node const & node) const {
+        inline bool isLeaf(Node_ABBEL const & node) const {
             return node.childrenCount() == 0;
         }
 
@@ -180,7 +180,7 @@ class Tree {
          * @param node  Le noeud qu'il faut afficher.
          * @param k     L'indentation en fonction de la profondeur atteinte.
          */
-        void displayNode(Node const & node, int k = -1) const {
+        void displayNode(Node_ABBEL const & node, int k = -1) const {
             if (k > 0)
                 std::cout << "|";
             for (int j = 0; j < k; j++)
@@ -188,12 +188,12 @@ class Tree {
             if (k >= 0)
                 std::cout << "|- ";
             std::cout << node.value() << "\n";
-            for (Node::Index const & i : node.indexesChildren()) {
+            for (Node_ABBEL::Index const & i : node.indexesChildren()) {
                 displayNode(getNodeFromIndex(i), k + 1);
             }
         }
 
-        Tree & operator= (Tree const & tree) {
+        Tree_ABBEL & operator= (Tree_ABBEL const & tree) {
             if (&tree != this) {
                 _nodes.clear();
                 _nodes.reserve(tree._nodes.capacity());
@@ -208,11 +208,11 @@ class Tree {
          * @param node  Le noeud dont il faut vérifier la présence.
          * @return Vrai si le noeud est présent dans cet arbre, faux sinon.
          */
-        inline bool isNodePresent(Node const & node) const {
+        inline bool isNodePresent(Node_ABBEL const & node) const {
             // On vérifie que l'index du noeud pointe bien sur le noeud avec la même adresse mémoire
             return node.index().value() < nodesCount() && &_nodes[node.index().value()] == &node;
         }
 
         /// L'ensemble des noeuds de l'arbre.
-        std::vector<Node> _nodes;
+        std::vector<Node_ABBEL> _nodes;
 };

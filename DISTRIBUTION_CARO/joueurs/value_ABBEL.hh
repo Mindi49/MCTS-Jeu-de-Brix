@@ -6,12 +6,12 @@
 /**
  * @brief La valeur contenant les informations liées à l'algorithme MCTS.
  */
-struct Value {
+struct Value_ABBEL {
     int gain = 0;
     int visitCount = 0;
     Brix brix;
 
-    inline friend std::ostream& operator<< (std::ostream & oss, Value const & value){
+    inline friend std::ostream& operator<< (std::ostream & oss, Value_ABBEL const & value){
         oss << value.toString();
         return oss;
     }
