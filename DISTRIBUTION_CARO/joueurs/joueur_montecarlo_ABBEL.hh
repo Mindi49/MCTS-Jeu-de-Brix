@@ -53,7 +53,7 @@ class Joueur_MonteCarlo_ABBEL : public Joueur {
          * @brief Choisit le meilleur noeud parmi les noeuds enfants.
          * @return L'indice du meilleur noeud.
          */
-        Node_ABBEL::Index chooseBestChildNode() const;
+        Node_ABBEL::Index chooseBestChildNode(int playedMovesCount) const;
 
         /**
          * @brief Simule en boucle des scénarios de MCTS tant qu'on peut.
@@ -72,17 +72,19 @@ class Joueur_MonteCarlo_ABBEL : public Joueur {
         /**
          * @brief Recherche le noeud enfant ayant le meilleur QUBC pour continuer la descente sur ce noeud.
          * @param nodeIndex L'indice du noeud pour lequel on recherche l'enfant au meilleur QUBC.
+         * @param playedMovesCount  Le nombre de coup joué.
          * @return L'indice du noeud enfant ayant le meilleur QUBC.
          */
-        Node_ABBEL::Index findBestQUBC(Node_ABBEL::Index nodeIndex) const;
+        Node_ABBEL::Index findBestQUBC(Node_ABBEL::Index nodeIndex, int playedMovesCount) const;
 
         /**
          * @brief Calcule le QUBC d'un noeud de l'arbre.
          * @param nodeIndex         Le noeud dont on veut calculer le QUBC.
          * @param parentNodeIndex   Le noeud parent du noeud pour lequel on caclule le QUBC.
+         * @param playedMovesCount  Le nombre de coup joué.
          * @return Le QUBC du noeud.
          */
-        float calculateNodeQUBC(Node_ABBEL::Index nodeIndex, Node_ABBEL::Index parentNodeIndex) const;
+        float calculateNodeQUBC(Node_ABBEL::Index nodeIndex, Node_ABBEL::Index parentNodeIndex, int playedMovesCount) const;
 
         /**
          * @brief Effectue l'étape de growth de l'algorithme du MCTS.
@@ -122,7 +124,6 @@ class Joueur_MonteCarlo_ABBEL : public Joueur {
          * @return Un iterator pointant sur la brix correspondante.
          */
         std::vector<Brix>::const_iterator findBrix(std::vector<Brix> const & brixs, Brix const & b) const;
-
 
         /// L'indice de la racine "courante", à partir duquel faire la recherche
         Node_ABBEL::Index _currentRoot;

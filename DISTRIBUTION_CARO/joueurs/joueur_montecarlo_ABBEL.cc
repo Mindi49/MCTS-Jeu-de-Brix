@@ -56,7 +56,7 @@ void Joueur_MonteCarlo_ABBEL::recherche_coup(Jeu game, Brix & move) {
 
         // Choix du coup à jouer
         if (_tree.getNodeFromIndex(_currentRoot).childrenCount() > 0) { // On a déjà des enfants
-            _currentRoot = chooseBestChildNode();
+            _currentRoot = chooseBestChildNode(game.nbCoupJoue());
         }
         else { // Pas d'enfant : Crée un noeud parmi les coups légaux
             _currentRoot = processMCTS(game);
@@ -105,12 +105,15 @@ Index Joueur_MonteCarlo_ABBEL::processMCTS(Jeu game) {
 }
 
 
-Index Joueur_MonteCarlo_ABBEL::chooseBestChildNode() const {
+Index Joueur_MonteCarlo_ABBEL::chooseBestChildNode(int playedMovesCount) const {
+    int op = playedMovesCount % 2 == 0 ? 1 : -1;
+
     std::vector<Index> const & indexesChildren(_tree.getNodeFromIndex(_currentRoot).indexesChildren());
-    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [](Index const & nodeIndex1, Index const & nodeIndex2) {
+    return *std::max_element(indexesChildren.begin(), indexesChildren.end(), [op](Index const & nodeIndex1, Index const & nodeIndex2) {
         Value_ABBEL const & nodeValue1(_tree.getNodeFromIndex(nodeIndex1).value());
         Value_ABBEL const & nodeValue2(_tree.getNodeFromIndex(nodeIndex2).value());
-        return float(nodeValue1.gain)/nodeValue1.visitCount < float(nodeValue2.gain)/nodeValue2.visitCount;
+        return float(nodeValue1.gain * op)/nodeValue1.visitCount < float(nodeValue2.gain * op)/nodeValue2.visitCount;
+       // return nodeValue1.visitCount < nodeValue2.visitCount;
     });
 }
 
@@ -151,7 +154,7 @@ Index Joueur_MonteCarlo_ABBEL::descent(Index currentNodeIndex, Jeu & game){
             return growth(currentNodeIndex,move);
         }
         else { // On a exploré au moins une fois tous les coups licites à partir de ce noeud
-            Index const & bestNodeIndex(findBestQUBC(currentNodeIndex));
+            Index const & bestNodeIndex(findBestQUBC(currentNodeIndex, game.nbCoupJoue()));
             game.joue(_tree.getNodeFromIndex(bestNodeIndex).value().brix);
             return descent(bestNodeIndex,game);
         }
@@ -161,19 +164,20 @@ Index Joueur_MonteCarlo_ABBEL::descent(Index currentNodeIndex, Jeu & game){
 }
 
 
-Index Joueur_MonteCarlo_ABBEL::findBestQUBC(Index nodeIndex) const {
+Index Joueur_MonteCarlo_ABBEL::findBestQUBC(Index nodeIndex, int playedMovesCount) const {
     std::vector<Index> const & indexesChildren(_tree.getNodeFromIndex(nodeIndex).indexesChildren());
     return *std::max_element(indexesChildren.begin(), indexesChildren.end(),
-    [this,&nodeIndex](Index const & childNodeIndex1, Index const & childNodeIndex2) {
-        return calculateNodeQUBC(childNodeIndex1,nodeIndex) < calculateNodeQUBC(childNodeIndex2,nodeIndex);
+    [this,&nodeIndex,&playedMovesCount](Index const & childNodeIndex1, Index const & childNodeIndex2) {
+        return calculateNodeQUBC(childNodeIndex1,nodeIndex,playedMovesCount) < calculateNodeQUBC(childNodeIndex2,nodeIndex, playedMovesCount);
     });
 }
 
 
-float Joueur_MonteCarlo_ABBEL::calculateNodeQUBC(Index nodeIndex, Index parentNodeIndex) const {
+float Joueur_MonteCarlo_ABBEL::calculateNodeQUBC(Index nodeIndex, Index parentNodeIndex, int playedMovesCount) const {
+    int op = playedMovesCount % 2 == 0 ? 1 : -1;
     Value_ABBEL const & nodeValue(_tree.getNodeFromIndex(nodeIndex).value());
     Value_ABBEL const & parentNodeValue(_tree.getNodeFromIndex(parentNodeIndex).value());
-    return (nodeValue.gain / nodeValue.visitCount) + sqrtf(POND_C * (logf(parentNodeValue.visitCount) / nodeValue.visitCount));
+    return (nodeValue.gain * op / nodeValue.visitCount) + sqrtf(POND_C * (logf(parentNodeValue.visitCount) / nodeValue.visitCount));
 }
 
 
@@ -190,7 +194,7 @@ int Joueur_MonteCarlo_ABBEL::rollout (Jeu game) {
     if (game.partie_nulle()) {
         return 0;
     }
-    if ((joueur() && game.partie_X()) || (!joueur() && game.partie_O())) {
+    if (game.partie_X()) {
         return 1;
     }
     return -1;
